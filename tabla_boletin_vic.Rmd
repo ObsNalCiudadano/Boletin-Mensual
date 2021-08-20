@@ -1,0 +1,415 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(knitr.table.format = "html")
+library(formattable)
+library(tidyverse)
+library(sparkline)
+library(kableExtra)
+library(lubridate)
+library(htmlwidgets)
+library(htmltools)
+library(tabulizer)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7}
+
+getONC <- function(nivel, valores, periodo){
+  
+  if (str_detect(getwd(), 'emcdo')) {
+    
+    path <- "C:/Users/emcdo/Google Drive/big_carpet/Bases Generales/tidy"
+
+  } else  {
+  
+    path <- "C:/Users/danib/Google Drive/big_carpet/Bases Generales/tidy"
+  
+  }
+  
+  if(periodo %in% c(1,2,3,4,6,12) & nivel == 'est') {
+  
+  niveles <- c('est' = 'estatal_virk_ordenado.csv',
+               'mun' = 'tidy_mpal_full.csv')
+  
+  valores1 <- c('ci_abs' = 'researchFolders', 'ci_tasa' = 'researchFoldersRate',
+               'vic_abs' = 'victimCase', 'vic_tasa' = 'victimRate')
+
+  base <- read_csv(paste(path, niveles[[nivel]], sep = '/'),
+                   col_types = c('victimCase' = 'd',
+                                 'victimRate' = 'd')) %>% 
+    mutate(date = ceiling_date(date, paste(periodo, 'months'))-1) %>% 
+    group_by(inegiEntidad, inegiEntidadName, typeCrimeName, typeCrime, date) %>% 
+    summarise(researchFolders = sum(researchFolders),
+              researchFoldersRate = sum(researchFoldersRate),
+              victimCase = sum(victimCase, na.rm = TRUE),
+              victimRate = sum(victimRate, na.rm = TRUE)) %>% ungroup() %>% 
+    select(inegiEntidad:date, valores1[valores])
+  
+  return(base)
+  
+  } else if (periodo %in% c(1,2,3,4,6,12) & nivel == 'mun') {
+    
+    
+    niveles <- c('est' = 'estatal_virk_ordenado.csv',
+                 'mun' = 'tidy_mpal_full.csv')
+    
+    valores1 <- c('ci_abs' = 'researchFolders', 'ci_tasa' = 'researchFoldersRate')
+    
+    base <- read_csv(paste(path, niveles[[nivel]], sep = '/')) %>% 
+      mutate(date = ceiling_date(date, paste(periodo, 'months'))-1) %>% 
+      group_by(inegiEntidad, inegiMunicipality, inegiMunicipalityName,
+               inegiEntidadName, typeCrimeName, typeCrime, date) %>% 
+      summarise(researchFolders = sum(researchFolders),
+                researchFoldersRate = sum(researchFoldersRate)) %>% ungroup() %>% 
+      select(inegiEntidad:date, valores1[valores])
+    
+    return(base)
+    
+
+  } else {
+    if(periodo %in% -c(1,2,3,4,6,12)){
+    
+    stop('plis pon mes correcto, opciones:
+        
+         1,2,3,4,6,12')
+    
+      } else {
+    
+    stop('plis pon nivel correcto, opciones:
+          "est", "mun"
+         ')
+      
+    }
+    
+  }
+  
+}
+
+vic_in <- 'C:/Users/emcdo/Google Drive/big_carpet/Bases generales'
+
+usuario <- 'emcdo'
+
+# sec_url_path <- paste0('C:/Users/', usuario, '/Google Drive/big_carpet/Bases Generales/str_url_secuestro_actual.txt')
+
+# pdf_path_ff <- str_sub(read.table(paste0(sec_url_path))[[1]], start = 33, end = -23) #extraer url para tablas de secuestro ff
+
+# pdf_path_ff <-"12H3o05DgVcGfhkZr51AdokiS1YMBaNfK"
+
+
+# pob <- read_csv('https://www.dropbox.com/s/rbg059jn9eikbim/statepop.csv?dl=1') %>% 
+#   mutate(Entidad = ifelse(StateName == 'Distrito Federal', 'Ciudad de México',
+#                           ifelse(StateName == 'Coahuila', 'Coahuila de Zaragoza',
+#                                  ifelse(StateName == 'Michoacán', 'Michoacán de Ocampo',
+#                                         ifelse(StateName == 'Veracruz', 'Veracruz de Ignacio de la Llave', StateName)))),
+#          ao = Year) %>% select(ao, Total, Entidad)
+
+#Encoding(pob$Entidad) <- 'UTF-8'
+
+#Encoding(unique(pob$Entidad)) 
+
+########calcular poblacion nacional----
+
+# pob_nac <- pob %>% 
+#   group_by(ao) %>% 
+#   summarise(Total = sum(Total)) %>% 
+#   mutate(Entidad = 'Nacional') %>% select(ao, Total, Entidad)
+
+# abs_vic <- read_csv(paste0(vic_in, '/absolutos_victimas.csv')) %>% 
+#   filter(state_code == 'Nacional',
+#          type_subtipo == 'Secuestro') %>% 
+#   gather(`2015_1`:`2021_12`, key = 'periodo', value = 'valorfc') %>% 
+#   separate(periodo, into = c('ao', 'mes'), sep = '_') %>% 
+#   mutate(ao = as.double(ao)) %>% 
+#   select(ao, mes, valorfc)
+
+
+
+# vic_19 <- extract_tables("https://drive.google.com/uc?authuser=0&id=1eskwXYHaDR6hxZkVYVsGUHG4Ywlc-aaW",
+#                          pages = c(2,3), output = 'data.frame', encoding = 'UTF-8')[[2]] %>% as_tibble() %>% select(-1, -Total, -X)%>% 
+#   mutate(ao = 2020) %>% 
+#   select(Enero:ao) %>% head(1)
+
+
+# vic_20 <- extract_tables(paste0("https://drive.google.com/uc?authuser=0&id=", pdf_path_ff),
+#                          pages = c(2,3), output = 'data.frame', encoding = 'UTF-8')[[2]] %>% as_tibble() %>% select(-1, -Total, -X)%>% head(1) %>% 
+#   mutate(ao = 2021) %>% 
+#   select(Enero:ao) 
+
+# names(vic_19) <- c(1:12, 'ao')
+
+# names(vic_20) <- c(1:12, 'ao')
+
+# sec_ff <- rbind(vic_19, vic_20) %>% 
+#   gather(1:12, key = 'mes', value = 'vic') %>% 
+#   left_join(pob_nac, by = 'ao')  %>% 
+#   left_join(abs_vic, by = c('ao', 'mes')) %>% 
+#   mutate(vic = vic + valorfc) %>% 
+#   mutate(valor = round(vic/Total *100000, 2),
+#          Delito = 'Secuestro') %>% 
+#   select(Delito, ao, mes, valor) %>% 
+#   mutate(valor = ifelse(is.na(valor), 0, valor))
+
+
+
+vic_new_del <- c('Homicidio doloso', 'Feminicidio', 'Homicidio culposo', 'Secuestro', 
+                 'Extorsión', "Trata de personas")
+
+
+# vic_new_del <- c('Homicidio doloso', 'Feminicidio', 'Homicidio culposo', 'Secuestro', 
+#                  'Extorsión', "Trata de personas", "Lesiones dolosas")
+
+
+
+if(day(Sys.Date()) >= 20){
+  num_mes_boletin <- month(today()) - 1
+} else {   num_mes_boletin <- month(today()) - 2 } 
+
+if(month(today()) == 1){
+  num_mes_boletin <- 12 + num_mes_boletin
+  
+}
+
+if(month(today())== 1){
+  
+  ao_actual <- year(today())-1
+} else{
+ao_actual <- year(today())
+}
+
+#temprorary month for testing
+periodo_actual <- ceiling_date(as.Date(paste(ao_actual, num_mes_boletin, 1, sep = '-')), '1 month')-1
+
+periodo_old <- periodo_actual - years(1)
+
+periodos <- c(periodo_actual, periodo_old)
+
+
+victimas <- getONC('est', 'vic_tasa', 1) %>% 
+  filter(date %in% periodos,
+         typeCrimeName %in% vic_new_del)
+
+vic_nac_full <- getONC('est', 'vic_tasa', 1) %>% 
+  filter(between(date, periodo_old, periodo_actual),
+         typeCrimeName %in% vic_new_del,
+         inegiEntidad == 0)
+
+victimas$typeCrimeName <- factor(victimas$typeCrimeName, levels = vic_new_del)
+
+vic_nac <- victimas %>% 
+  filter(inegiEntidad == 0) %>% 
+  arrange(typeCrimeName)
+
+vic_est <- victimas%>% 
+  filter(inegiEntidad != 0) %>% 
+  arrange(typeCrimeName)
+
+vic_rank_list <- NULL
+
+for(i in 1:length(vic_new_del)){
+  
+  loop_ob <- vic_est %>% 
+    filter(typeCrimeName == vic_new_del[[i]],
+           date == periodo_actual) %>%
+    arrange(desc(vic_tasa))
+  
+  vic_rank_list[i] <- loop_ob[[1, 'inegiEntidadName']]
+  
+}
+
+prim_vic_full <- data.frame(Delito = vic_new_del) %>% as.tibble()
+
+prim_vic_full <- prim_vic_full %>% 
+  mutate(`<small>Entidad con<br>mayor tasa</small>` = vic_rank_list)
+
+
+
+
+meses_1 <- c('Enero' = 1, 'Febrero' = 2, 'Marzo' = 3, 'Abril' = 4, 'Mayo' = 5, 'Junio' = 6, 
+           'Julio' = 7, 'Agosto' = 8, 'Septiembre' = 9, 'Octubre' = 10, 'Noviembre' = 11, 
+           'Diciembre' = 12)
+
+mes_df <- data.frame(mes = meses_1, 
+                     nom_mes = names(meses_1))
+
+
+logos_vic <- tribble(~` `, 
+                 '<img src ="HD.png" width="40" height="40" />',
+                 '<img src ="FEM.png" width="40" height="40" />',
+                 '<img src ="HC.png" width="40" height="40" />',
+                 '<img src ="SEC.png" width="40" height="40" />',
+                 '<img src ="EXT.png" width="40" height="40" />',
+                 '<img src ="TRA.png" width="40" height="40" />'#,
+                 # '<img src ="LD.png" width="40" height="40" />'
+)
+
+
+
+
+# meses <- c(1:12)
+
+
+
+# tas_vic <- read_csv(paste0(vic_in, '/tasas_victimas.csv')) 
+
+
+
+# prim_vic_list <- list()
+
+# for (i in 1:length(vic_new_del)){
+#   
+#   prim_vic_list[[i]] <- tas_vic%>% 
+#     filter(state_code != 'Nacional',
+#            delitos == vic_new_del[[i]]) %>% 
+#     gather(`2015_1`:`2021_12`, key = "fecha", value = 'valor') %>% 
+#     separate(fecha, into = c('ao', 'mes'), sep = '_') %>% 
+#     filter(str_detect(ao, as.character(ao_actual)),
+#            mes %in% num_mes_boletin) %>% 
+#     group_by(state_code, ao, delitos) %>% 
+#     summarise(tasa = sum(valor)) %>% ungroup() %>% 
+#     arrange(desc(tasa)) %>% 
+#     mutate(Delito = delitos,
+#            `<small>Entidad con<br>mayor tasa</small>` = state_code) %>% 
+#     select(Delito, `<small>Entidad con<br>mayor tasa</small>`) %>% head(1)
+#   
+# }
+
+# prim_vic_full <- do.call(rbind, prim_vic_list)
+
+
+# vic_nac <- tas_vic%>% 
+#   filter(state_code == 'Nacional',
+#          delitos %in% vic_new_del) %>% 
+#   mutate(Delito = delitos) %>% 
+#   select(Delito, state_code, `2020_1`:`2021_12`) %>% 
+#   gather(`2020_1`:`2021_12`, key = 'fech',value = 'valor') %>% select(-state_code) %>% 
+#   separate(fech, into = c('ao', 'mes'), sep = '_') %>% 
+#   filter(mes %in% meses,
+#          Delito != 'Secuestro') %>% 
+#   rbind(sec_ff)
+# 
+# vic_nac$Delito <- factor(vic_nac$Delito, levels = vic_new_del)
+
+ 
+# vic_nac %>% 
+#   group_by(ao, Delito) %>% 
+#   summarise(tot = round(sum(valor), 2)) %>% ungroup() %>% 
+#   spread(ao, tot) %>% 
+#   mutate(Variación = round((`2020`-`2019`)/`2019` *100, 2))
+  #mutate(Variación = paste0(round((`2020`-`2019`)/`2019` *100, 2), '%'))
+
+
+vic_graf <- vic_nac_full %>%
+  select(-typeCrime) %>% 
+  spread(typeCrimeName, vic_tasa) %>% 
+  arrange(desc(date)) %>% head(6)
+
+# vic_graf <- vic_nac %>% spread(Delito, valor) %>% 
+#   arrange(ao, as.double(mes)) %>%
+#   filter(ao == '2020' | ao == "2021" & as.double(mes) <=num_mes_boletin) %>% 
+#   tail(6)
+
+
+lineas_vic <- data.frame(Delito = c(vic_new_del),
+                     Tendencia = c(
+                       as.character(htmltools::as.tags(sparkline(vic_graf$`Homicidio doloso`, type = "line"))),
+                       as.character(htmltools::as.tags(sparkline(vic_graf$Feminicidio, type = "line"))),
+                       as.character(htmltools::as.tags(sparkline(vic_graf$`Homicidio culposo`, type = "line"))),
+                       as.character(htmltools::as.tags(sparkline(vic_graf$Secuestro, type = "line"))),
+                       as.character(htmltools::as.tags(sparkline(vic_graf$Extorsión, type = "line"))),
+                       as.character(htmltools::as.tags(sparkline(vic_graf$`Trata de personas`, type = "line"))) #,
+                       # as.character(htmltools::as.tags(sparkline(vic_graf$`Lesiones dolosas`, type = "line")))
+
+                     )
+)
+
+
+vicnac2 <- vic_nac %>% 
+  mutate(ao = year(date),
+         mes = month(date)) %>% 
+  inner_join(mes_df, by = 'mes') %>% 
+  mutate(periodo = paste(nom_mes, ao)) %>% 
+  select(Delito = typeCrimeName, vic_tasa, periodo) %>% 
+  spread(periodo, vic_tasa) %>% 
+  mutate(Variación = round((.[[3]]-.[[2]])/.[[2]] *100, 2), 
+         Variación = cell_spec(percent(Variación)/100, 'html', color = ifelse(Variación <= 0, 'green', 'red'), align = 'center'))%>% 
+  inner_join(lineas_vic, by = 'Delito') %>% 
+  inner_join(prim_vic_full, by = 'Delito')
+
+
+namestring <- names(vicnac2)[[2]]
+namestring2 <- names(vicnac2)[[3]]
+
+
+base <- vicnac2 %>% 
+  mutate(!! namestring := round(.[[2]], 2),
+         !! namestring2 := round(.[[3]], 2)) %>% 
+  mutate(Delito = paste0('<span style="font-family:Fira Sans, thin, sans-serif; font-size:150%">', Delito, '</span>'),
+         !! namestring := paste0('<span style="font-family:Fira Sans, thin, sans-serif; font-size:150%">', .[[2]], '</span>'),
+         !! namestring2 := paste0('<span style="font-family:Fira Sans, thin, sans-serif; font-size:150%">', .[[3]], '</span>'),
+                  Variación = paste0('<span style="font-family:Fira Sans, thin, sans-serif; font-size:150%">', Variación, '</span>'),
+         Tendencia = paste0('<small>', Tendencia, '</small>'),
+         `<small>Entidad con<br>mayor tasa</small>` = paste0('<span style="font-family:Fira Sans, thin, sans-serif; font-size:150%">', `<small>Entidad con<br>mayor tasa</small>`, '</span>'))
+
+
+# col2 <- names(vicnac2)[2]
+# 
+# vicnac3 <- vicnac2 %>% 
+#   mutate(col2 = round(.[[2]], 1))
+  
+
+# vic_tabla_body <- vic_nac %>% 
+#   filter(as.double(mes) == num_mes_boletin) %>% 
+#   group_by(ao, Delito) %>% 
+#   summarise(tot = round(sum(valor), 2)) %>% ungroup() %>% 
+#   spread(ao, tot) %>% 
+#   mutate(Variación = round((`2021`-`2020`)/`2020` *100, 2)) 
+  #mutate(Variación = paste0(round((`2020`-`2019`)/`2019` *100, 2), '%'))
+  
+# base <- cbind(logos_vic, vic_tabla_body) %>% 
+#     mutate(`2020` = cell_spec(`2020`, align = 'center'),
+#          `2021` = cell_spec(`2021`, align = 'center'),
+#          Variación = cell_spec(percent(Variación)/100, 'html', color = ifelse(Variación <= 0, 'green', 'red'), align = 'center'),
+#          ) %>% 
+#   inner_join(lineas_vic, by = 'Delito') %>% 
+#   inner_join(prim_vic_full, by = 'Delito')%>% 
+#   mutate(Delito = paste0('<span style="font-family:Fira Sans, thin, sans-serif; font-size:150%">', Delito, '</span>'),
+#          `2020` = paste0('<span style="font-family:Fira Sans, thin, sans-serif; font-size:150%">', `2020`, '</span>'),
+#          `2021` = paste0('<span style="font-family:Fira Sans, thin, sans-serif; font-size:150%">', `2021`, '</span>'),
+#                   Variación = paste0('<span style="font-family:Fira Sans, thin, sans-serif; font-size:150%">', Variación, '</span>'),
+#          Tendencia = paste0('<small>', Tendencia, '</small>'),
+#          `<small>Entidad con<br>mayor tasa</small>` = paste0('<span style="font-family:Fira Sans, thin, sans-serif; font-size:150%">', `<small>Entidad con<br>mayor tasa</small>`, '</span>'))
+
+names(base)[c(1, 4:6)] <- sapply(names(base)[c(1, 4:6)], function(x) paste0('<span style="font-family:Fira Sans, medium, sans-serif; font-size:160%">', x, '</span>'))
+
+names(base)[c(2, 3)] <- sapply(names(base)[c(2, 3)], function(x) paste0('<span style="font-family:Fira Sans, medium, sans-serif; font-size:140%">',
+                                                               # names(meses_1[num_mes_boletin]),
+                                                               '<br>',
+                                                               x, '</span>'))
+
+logos_vic %>% 
+  cbind(base) %>% 
+  formattable::format_table(
+  x = ., format = 'html', align = c("clcccc"),
+  formatters = list(
+    align=c("l")
+  )
+  )%>% 
+#kable(format = 'html', escape = F, align = c("crccc")) %>% 
+  kable_styling() %>% 
+  column_spec(1, background = '#EDEFEC') %>% 
+  column_spec(2, bold = T) %>% 
+  column_spec(3, background = '#EDEFEC', bold = T) %>% 
+  column_spec(4, bold = T) %>%
+  column_spec(5, background = '#EDEFEC', bold = T) %>% 
+    column_spec(7, background = '#EDEFEC', bold = T) %>% 
+   row_spec(0, color = 'white', background = '#21353D', bold = T, align = "clcccc")%>%
+   htmltools::HTML() %>%
+   shiny::div() %>%
+   sparkline::spk_add_deps() 
+
+
+```
+

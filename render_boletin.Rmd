@@ -1,0 +1,722 @@
+---
+title: "boletin execution test"
+output: blastula::blastula_email
+keep_md: yes
+---
+```{r setup, include=FALSE}
+htmltools::tagList(rmarkdown::html_dependency_font_awesome())
+```
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+options(knitr.table.format = "asis")
+
+ library(tidyverse)
+ library(lubridate)
+ library(formattable)
+ library(png)
+ library(grid)
+ library(gridExtra)
+ library(extrafont)
+ library(formattable)
+ library(sparkline)
+ library(kableExtra)
+ library(lubridate)
+ library(htmltools)
+ library(mxmaps)
+ library(BAMMtools)
+ library(RColorBrewer)
+ library(gsheet)
+
+links <- gsheet2tbl('https://docs.google.com/spreadsheets/d/1pGRKYS1el_yIexTZaZzn2JeRT4KhJoLX8T95f5qLkH4')
+
+ meses <- c('enero' = 1, 'febrero' = 2, 'marzo' = 3, 'abril' = 4, 'mayo' = 5, 'junio' = 6, 
+            'julio' = 7, 'agosto' = 8, 'septiembre' = 9, 'octubre' = 10, 'noviembre' = 11, 
+            'diciembre' = 12)
+# 
+# # Directorios
+# 
+# # Usuaria:
+# usi <- "C:/Users/emcdo"
+# 
+# # Directorios
+# 
+# input <- paste(usi, "Google Drive/big_carpet/Bases Generales/tidy", sep = "/")
+# input_logos_delitos <- paste(usi, "Google Drive/big_carpet/Disenio/Logos redondos", sep = "/") 
+# input_im <- paste(usi, "OneDrive/Documents/ONC/ROBOT", sep = "/")
+# out <- paste(usi, "OneDrive/Documents/ONC/ROBOT", sep = "/")
+# 
+# # Bases
+# 
+# b_est_t <- read_csv(paste(input, "TasasEstatalMasterTidy.csv", sep = "/"))
+# b_est_a <- read_csv(paste(input, "AbsEstatalMasterTidy.csv", sep = "/"))
+# 
+# 
+# #################################################################################################
+# # Creación de objetos para que el mes se seleccione en automático:
+# 
+ if(day(Sys.Date()) >= 20){
+   num_mes_boletin <- month(today()) - 1
+ } else {   num_mes_boletin <- month(today()) - 2 } 
+ 
+ if(month(today()) == 1 ){
+   num_mes_boletin <- 12 + num_mes_boletin
+   
+ }
+# 
+#temprorary month for testing
+ # num_mes_boletin <- 1
+ 
+ 
+ if(month(today())== 1){
+   
+   ao_actual <- year(today())-1
+ } else{
+ ao_actual <- year(today())
+ }
+ 
+ 
+cat_mes <- data.frame(nom_mes = c("Enero", "Febrero", "Marzo",
+                                  "Abril", "Mayo", "Junio",
+                                  "Julio", "Agosto", "Septiembre",
+                                  "Octubre", "Noviembre", "Diciembre"),
+                      num_mes = c(1:12))
+
+mes_abbr <- c('ene', 'feb', 'mar', 'abr', 'may', 'jun',
+              'jul', 'ago', 'sept', 'oct', 'nov', 'dic')
+
+
+
+
+nom_mes_boletin <- as.character(cat_mes[num_mes_boletin, 1])
+```
+<html>
+ 
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    
+<p>&nbsp;</p>
+
+<table align="center" border="0" cellpadding="1" cellspacing="1" style="width:500px">
+ <tbody>
+  <tr>
+   <td>
+   <p><strong><span style="font-size:18px"><span style="font-family:Fira Sans, medium, sans-serif">Boletin Mensual</span></span></strong></p>
+
+   <p><span style="font-family:Fira Sans, medium, sans-serif">Observatorio de incidencia delictiva</span></p>
+   </td>
+   <td>
+   <p>
+   <a href="http://onc.org.mx/" rel="nofollow" target="_blank">
+    ```{r, message=FALSE, echo=FALSE}
+HTML(paste0('<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/ong_h.png',
+            '" alt="centered image" style="height:172px; width:250px" /> '))
+    ```
+   </a>
+   </p>
+
+   <p>&nbsp;</p>
+   </td>
+  </tr>
+ </tbody>
+</table>
+
+<p>&nbsp;</p>
+
+<hr />
+<h1 style="text-align:center"><span style="font-family:Fira Sans, medium, sans-serif">&iquest;Qu&eacute; pas&oacute; en M&eacute;xico en  
+```{r, message=FALSE, echo=FALSE} 
+HTML(names(meses)[num_mes_boletin])
+``` 
+2021?</span></h1>
+
+<hr />
+<h1 style="text-align:center"><span style="font-family:Fira Sans, medium, sans-serif">En un d&iacute;a promedio se registraron:</span></h1>
+
+<!-- <table align="center"> -->
+<!--  <tbody> -->
+<!--   <tr> -->
+   <a href="https://delitosmexico.onc.org.mx/" rel="nofollow" target="_blank">
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/dia_prom_',
+            mes_abbr[[num_mes_boletin]],
+                 ao_actual, ".png" ,
+            '" alt="centered image" /> '))
+``` 
+   </a>
+           <span style="font-family:Fira Sans, medium, sans-serif">Fuente: Elaboración del Observatorio Nacional Ciudadano con datos del SESNSP.</span>
+   
+<!--   </tr> -->
+<!--  </tbody> -->
+<!-- </table> -->
+
+
+<hr />
+<h1 style="text-align:center"><span style="font-family:Fira Sans, medium, sans-serif">Mapas de incidencia</span></h1>
+
+
+   <p class="aligncenter">
+          <a href="https://delitosmexico.onc.org.mx/mapa?unit=folders&indicator=researchFoldersRate&period=&group=month&crime=0&domain=" rel="nofollow" target="_blank">
+    ```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/mapa_hd_',
+            mes_abbr[[num_mes_boletin]],
+                 ao_actual, ".png",
+            '" alt="centered image" />'
+            ))
+``` 
+        </a>
+   </p>
+
+   <p class="aligncenter">
+             <a href="https://delitosmexico.onc.org.mx/mapa?unit=folders&indicator=researchFoldersRate&period=&group=month&crime=0&domain=" rel="nofollow" target="_blank">
+    ```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/mapa_rvi_',
+            mes_abbr[[num_mes_boletin]],
+                 ao_actual, ".png",
+            '" alt="centered image" />'
+            ))
+``` 
+           </a>
+                   <span style="font-family:Fira Sans, medium, sans-serif">Fuente: Elaboración del Observatorio Nacional Ciudadano con datos del SESNSP.</span>
+   </p>
+
+<!-- <div style="text-align:center">&nbsp;</div> -->
+
+<!-- <div id="onc-graph">&nbsp;</div> -->
+
+<!-- <div> -->
+<hr />
+<h1 style="text-align:center"><span style="font-family:Fira Sans, medium, sans-serif">Focos rojos</span></h1>
+
+<h3 style="text-align:center"><span style="font-family:Fira Sans, medium, sans-serif">Las entidades de M&eacute;xico que presentaron aumentos importantes son...</span></h3>
+
+<!-- <table align="center" style="width:725px"> -->
+<!--   <tbody> -->
+   <p class="aligncenter">
+      <a href="https://delitosmexico.onc.org.mx/" rel="nofollow" target="_blank">
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/focos_rojos_',
+            mes_abbr[[num_mes_boletin]],
+                 ao_actual, ".png" ,
+            '" alt="centered image" name="focos.png"/>'
+            ))
+``` 
+     </a>
+     <br>
+     <br>
+        <span style="font-family:Fira Sans, medium, sans-serif">Fuente: Elaboración del Observatorio Nacional Ciudadano con datos del SESNSP.</span>
+   </p>
+<!--   <tr> -->
+<!--  </tbody> -->
+<!-- </table> -->
+
+<p style="text-align:center"><span style="font-family:Fira Sans, medium, sans-serif">&nbsp;</span></p>
+
+<!-- <div style="text-align:center">&nbsp;</div> -->
+
+
+<!-- <div> -->
+<hr />
+<h1 style="text-align:center"><span style="font-family:Fira Sans, medium, sans-serif">Panorama víctimas</span></h1>
+
+
+<!-- <div> -->
+<!-- <div> -->
+<p style="text-align:center"><span style="font-family:Fira Sans, medium, sans-serif">Los cambios en las tasas de las <strong>v&iacute;ctimas</strong>&nbsp;por cada 100 mil habitantes fueron...</span></p>
+
+<!-- <table align="center" style="width:732px"> -->
+<!--  <tbody> -->
+ <p class="aligncenter">
+       <a href="https://delitosmexico.onc.org.mx/variacion?unit=folders&indicator=researchFoldersRate&group=month&state=0&period=&domain=&municipality=0" rel="nofollow" target="_blank">
+    ```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/vic_screenshot_',
+            mes_abbr[[num_mes_boletin]],
+                 ao_actual, ".png",
+            '" alt="centered image" />'))
+``` 
+     </a>
+</p>
+   <span style="font-family:Fira Sans, medium, sans-serif; font-size: 80%">*La tasa del delito se estima por cada 100 mil habitantes</span>
+      <br>
+      <br>
+   <span style="font-family:Fira Sans, medium, sans-serif">Fuente: Elaboración del Observatorio Nacional Ciudadano con datos del SESNSP.</span>
+<!--   </tr> -->
+<!-- </tbody> -->
+<!-- </table> -->
+<!-- </div> -->
+<!-- </div> -->
+
+
+<h1 style="text-align:center"><span style="font-family:Fira Sans, medium, sans-serif">Panorama carpetas de investigación</span></h1>
+<p style="text-align:center">&nbsp;</p>
+
+
+<p style="text-align:center"><span style="font-family:Fira Sans, medium, sans-serif">Los cambios en las tasas de las <strong>carpetas de investigaci&oacute;n</strong> abiertas por cada 100 mil habitantes fueron...</span></p>
+
+<!-- <table align="center" style="height:552px; width:763px"> -->
+<!--  <tbody> -->
+   <p class="aligncenter">
+         <a href="https://delitosmexico.onc.org.mx/variacion?unit=folders&indicator=researchFoldersRate&group=month&state=0&period=&domain=&municipality=0" rel="nofollow" target="_blank">
+    ```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/ci_screenshot_',
+            mes_abbr[[num_mes_boletin]],
+                 ao_actual, ".png",
+            '" alt="centered image" />'
+            ))
+```
+        </a>
+   </p>
+  <!-- <tr> -->
+   <!-- <td colspan="7" style="text-align:center; width:49px"> -->
+   <span style="font-family:Fira Sans, medium, sans-serif; font-size: 80%">*La tasa del delito se estima por cada 100 mil habitantes</span>
+      <br>
+      <br>
+   <span style="font-family:Fira Sans, medium, sans-serif">Fuente: Elaboración del Observatorio Nacional Ciudadano con datos del SESNSP.</span>
+   <br>
+
+   <!-- </td> -->
+  <!-- </tr> -->
+ <!-- </tbody> -->
+<!-- </table> -->
+<!-- </div> -->
+<!-- </div> -->
+
+<hr />
+<br>
+<!-- <h1 style="text-align:center"><span style="font-family:Fira Sans, medium, sans-serif">Observatorio Nacional Ciudadano en medios</span></h1> -->
+
+
+<p>
+
+# Publicaciones
+
+<div class = "container">
+<div class = "row">
+
+## Reporte mensual mas reciente
+
+
+```{r echo = FALSE, results ='asis'}
+cat(paste0("### Si te interesa saber más sobre la incidencia delictiva en México, puedes consultar el último reporte completo " ,
+           '[aquí](', links$Link[[1]], ')'
+           
+)
+)
+```
+<!-- [aquí](https://onc.org.mx/uploads/Ags2020-rev.pdf) -->
+
+<!-- <div class = "col-md-6"> -->
+
+<!-- ![](C:/Users/emcdo/OneDrive/Documents/ONC/ROBOT/ultimo_impacto.PNG) -->
+
+<center>
+
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0(
+            '<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/ultimo_impacto_',
+            mes_abbr[[num_mes_boletin]],
+            ao_actual, ".png",
+            '" alt="" width="220" height="300" /> '
+))
+``` 
+
+</center>
+
+</div>
+</div>
+
+<!-- </div> -->
+
+<br>
+
+<!-- <div class = "col-md-6"> -->
+
+<div class = "container">
+<div class = "row">
+
+## Estudio más reciente
+
+
+```{r echo = FALSE, results ='asis'}
+cat(paste0("### Si te interesa aprender sobre temas de seguridad, justicia o legalidad, puedes consultar nuestro último estudio ",
+           '[aquí](', links$Link[[2]], ')'
+           
+)
+)
+```
+<!-- [aquí](https://onc.org.mx/uploads/digital-dfi-fasc3.pdf) -->
+
+<!-- ![](C:/Users/emcdo/OneDrive/Documents/ONC/ROBOT/ultimo_estudio.PNG) -->
+
+<center>
+
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0(
+            '<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/ultimo_estudio_',
+            mes_abbr[[num_mes_boletin]],
+            ao_actual, ".png",
+            '" alt="" width="220" height="300" /> '
+))
+``` 
+
+</center>
+
+</div>
+</div>
+
+<br>
+
+<!-- ## Próxima publicación -->
+<!-- ### El análisis de esta información saldrá en el mes de mayo.  -->
+
+
+</p>
+
+
+<br>
+</br>
+
+<hr />
+
+<br>
+
+# En medios
+
+<br>
+
+<div class = "container">
+<div class = "row">
+
+
+### Artículos de los investigadores
+<!-- [![](C:/Users/emcdo/OneDrive/Documents/ONC/ROBOT/investigadorxs.PNG)](https://onc.org.mx/multilateralizacin-y-guardia-nacional-otro-punto-ciego-del-proyecto) -->
+
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<a href="',
+            links$Link[[4]],
+            '">',
+            '<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/ultimo_investigadores_',
+            mes_abbr[[num_mes_boletin]],
+            ao_actual, ".png",
+            '" alt="" /> ',
+            '</a>'))
+``` 
+
+
+### Artículos de Francisco Rivas
+<!-- [![](C:/Users/emcdo/OneDrive/Documents/ONC/ROBOT/fransis.PNG)](https://www.eluniversal.com.mx/opinion/francisco-rivas/la-justicia-se-pone-consulta) -->
+
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<a href="',
+            links$Link[[3]],
+            '">',
+            '<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/ultimo_francisco_',
+            mes_abbr[[num_mes_boletin]],
+            ao_actual, ".png",
+            '" alt="" /> ',
+            '</a>'))
+``` 
+
+
+</div>
+</div>
+
+
+<br>
+</br>
+
+
+<div class = "container">
+<div class = "row">
+
+
+
+### Podcast
+<!-- [![](C:/Users/emcdo/OneDrive/Documents/ONC/ROBOT/podcast.PNG)](https://open.spotify.com/show/1I0AGWcE8xv2790sTZShwi?si=13xU9XoSRtOvDz0taZg6Cw) -->
+
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<a href="',
+            links$Link[[5]],
+            '">',
+            '<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/podcast_',
+            mes_abbr[[num_mes_boletin]],
+            ao_actual, ".png",
+            '" alt=""/> ',
+            '</a>'))
+``` 
+
+
+
+### Videos
+<!-- [![](C:/Users/emcdo/OneDrive/Documents/ONC/ROBOT/videos.PNG)](https://onc.org.mx/en_medios) -->
+<!-- <a href="https://www.youtube.com/channel/UCBzUD5nX6QjECcq0Uz0wq3Q" rel="nofollow" target="_blank"><img src="C:/Users/emcdo/OneDrive/Documents/ONC/ROBOT/videos.PNG" alt="" width="300" height="150"> -->
+<!-- </a> -->
+
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<a href="',
+            links$Link[[6]],
+            '">',
+            '<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/ultimo_video_',
+            mes_abbr[[num_mes_boletin]],
+            ao_actual, ".png",
+            '" alt="" /> ',
+            '</a>'))
+``` 
+
+
+</div>
+</div>
+
+
+
+
+</center>
+
+<hr />
+
+# Red Nacional de Observatorios
+
+### Si te interesa consultar la información sobre alguno de los observatorios locales, **haz clic en la imagen.** 
+
+<br>
+<br>
+
+
+<div class = "container">
+<div class = "row">
+
+
+<!-- ### Cómo Vamos La Paz -->
+<!-- [![](C:/Users/emcdo/OneDrive/Documents/ONC/ROBOT/lapaz.PNG)](https://onc.org.mx/multilateralizacin-y-guardia-nacional-otro-punto-ciego-del-proyecto) -->
+
+```{r echo = FALSE, results ='asis'}
+cat('###', links$URL[[7]])
+# cat(paste0(
+#   '[![](',
+#   'http://onc.org.mx/public/uploadservice/imagenes/obs_locales1_',
+#   mes_abbr[[num_mes_boletin]],
+#   ao_actual, ".png)](",
+#   links$Link[[7]],
+#   ')'
+# )
+# )
+
+```
+
+
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<a href="',
+            links$Link[[7]],
+            '">',
+            '<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/obs_locales1_',
+            mes_abbr[[num_mes_boletin]],
+            ao_actual, ".png",
+            '" alt="centered image"/> ',
+            '</a>'))
+``` 
+
+
+
+<!-- ### Irapuato Cómo Vamos -->
+<!-- <!-- [![](C:/Users/emcdo/OneDrive/Documents/ONC/ROBOT/fransis.PNG)](https://onc.org.mx/en_medios) --> 
+<!-- <!-- <img src="C:/Users/emcdo/OneDrive/Documents/ONC/ROBOT/fransis.PNG" alt="" width="75" height="75"> --> 
+<!-- [![](C:/Users/emcdo/OneDrive/Documents/ONC/ROBOT/irapuato.PNG)](https://www.eluniversal.com.mx/opinion/francisco-rivas/la-justicia-se-pone-consulta) -->
+
+```{r echo = FALSE, results ='asis'}
+cat('###', links$URL[[8]])
+# cat(paste0(
+#   '[![](',
+#   'http://onc.org.mx/public/uploadservice/imagenes/obs_locales2_',
+#   mes_abbr[[num_mes_boletin]],
+#   ao_actual, ".png)](",
+#   links$Link[[8]],
+#   ')'
+# )
+# )
+
+```
+
+
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<a href="',
+            links$Link[[8]],
+            '">',
+            '<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/obs_locales2_',
+            mes_abbr[[num_mes_boletin]],
+            ao_actual, ".png",
+            '" alt="centered image"/> ',
+            '</a>'))
+``` 
+
+
+
+</div>
+</div>
+
+
+<br>
+</br>
+
+
+<div class = "container">
+<div class = "row">
+
+
+
+<!-- ### Observatorio Ciudadano Chiapas -->
+<!-- [![](C:/Users/emcdo/OneDrive/Documents/ONC/ROBOT/chiapas.PNG)](https://open.spotify.com/show/1I0AGWcE8xv2790sTZShwi?si=13xU9XoSRtOvDz0taZg6Cw) -->
+```{r echo = FALSE, results ='asis'}
+cat('###', links$URL[[9]])
+# cat(paste0(
+#   '[![](',
+#   'http://onc.org.mx/public/uploadservice/imagenes/obs_locales3_',
+#   mes_abbr[[num_mes_boletin]],
+#   ao_actual, ".png)](",
+#   links$Link[[9]],
+#   ')'
+# )
+# )
+
+```
+
+
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<a href="',
+            links$Link[[9]],
+            '">',
+            '<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/obs_locales3_',
+            mes_abbr[[num_mes_boletin]],
+            ao_actual, ".png",
+            '" alt="centered image"/> ',
+            '</a>'))
+``` 
+
+
+<!-- ### Observatorio CIudadano de Parral -->
+<!-- [![](C:/Users/emcdo/OneDrive/Documents/ONC/ROBOT/parral.PNG)](https://onc.org.mx/en_medios) -->
+```{r, message=FALSE, echo=FALSE, results ='asis'}
+cat('###', links$URL[[10]])
+# cat(paste0(
+#   '[![](',
+#   'http://onc.org.mx/public/uploadservice/imagenes/obs_locales4_',
+#   mes_abbr[[num_mes_boletin]],
+#   ao_actual, ".png)](",
+#   links$Link[[10]],
+#   ')'
+# )
+# )
+
+```
+
+
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<a href="',
+            links$Link[[10]],
+            '">',
+            '<img src="',
+            'http://onc.org.mx/public/uploadservice/imagenes/obs_locales4_',
+            mes_abbr[[num_mes_boletin]],
+            ao_actual, ".png",
+            '" alt="centered image"/> ',
+            '</a>'))
+``` 
+
+</div>
+</div>
+
+
+<hr />
+
+# Atención a víctimas
+
+### Si eres o fuiste víctima de violencia familiar, robo, extorsión, secuestro, trata de personas, fraude o usurpación de la identidad; o eres familiar de una víctima de feminicidio, homicidio o persona desaparecida, la Dirección de **Atención a Víctimas del ONC** podrá brindarte asesoría y orientación jurídica y psicológica.
+
+<br>
+
+### Contáctanos a través del correo atencion.victimas@onc.org.mx o rvigueras@onc.org.mx
+
+<br>
+<br>
+
+<div class = "container">
+<div class = "row">
+
+<br>
+<br>
+
+### Teléfono/whatsapp: 56 1988 2645
+
+<!-- <img src = 'http://onc.org.mx/public/uploadservice/imagenes/qr.png' alt="Centered image" -->
+<!-- style="height:120px; width:120px" > -->
+
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<img src = "http://onc.org.mx/public/uploadservice/imagenes/qr.png" alt="Centered image" style="height:120px; width:120px"/>'
+            ))
+```
+
+</div>
+</div>
+
+
+<hr />
+
+
+<p style="text-align:center"><span style="font-family:Fira Sans, medium, sans-serif">Fuente de informaci&oacute;n:<a href="https://www.gob.mx/sesnsp/acciones-y-programas/datos-abiertos-de-incidencia-delictiva" rel="noopener" target="_blank">Secretariado Ejecutivo del Sistema Nacional de Seguridad P&uacute;blica</a></span></p>
+
+
+
+<p style="text-align:center"><span style="font-family:Fira Sans, medium, sans-serif">Observatorio Nacional Ciudadano &reg; 2020 | Todos los derechos reservados</span></p>
+
+
+<p style="text-align:center">&nbsp;
+
+
+<center>
+
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<a href="https://twitter.com/ObsNalCiudadano">',
+            '<img src="https://cdn3.iconfinder.com/data/icons/transparent-on-dark-grey/500/icon-03-512.png"',
+            ' alt="centered image" width="30" height="30" /> ',
+            '</a>'))
+``` 
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<a href="https://www.instagram.com/obsnalciudadano">',
+            '<img src="https://cdn3.iconfinder.com/data/icons/transparent-on-dark-grey/500/icon-04-512.png"',
+            ' alt="centered image" width="30" height="30" /> ',
+            '</a>'))
+``` 
+```{r, message=FALSE, echo=FALSE} 
+HTML(paste0('<a href="https://www.facebook.com/ObservatorioNacionalCiudadano">',
+            '<img src="https://cdn3.iconfinder.com/data/icons/transparent-on-dark-grey/500/icon-02-512.png"',
+            ' alt="centered image" width="30" height="30" /> ',
+            '</a>'))
+``` 
+
+
+
+<!-- <a href="https://twitter.com/ObsNalCiudadano"> <img src="https://www.iconsdb.com/icons/preview/black/twitter-xxl.png" alt="centered image" width="30" height="30" /></a> -->
+<!-- <a href="https://www.instagram.com/obsnalciudadano/"> <img src="https://findicons.com/files/icons/2770/ios_7_icons/128/instagram.png" alt="centered image" width="30" height="30" /></a> -->
+<!-- <a href="https://www.facebook.com/ObservatorioNacionalCiudadano"> <img src="https://findicons.com/files/icons/2435/alex_peattie/32/facebook_alt.png" alt="centered image" width="30" height="30" /></a> -->
+
+
+</center>
+
+</p>
